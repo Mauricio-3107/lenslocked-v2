@@ -1,0 +1,8 @@
+<h1>Gallery: {{if .Name}} {{.Name}} {{else}} No Gallery :( {{end}}</h1>
+
+{{range .Galleries}}
+<div class="widget">
+    <h3 class="name">Name: {{.Author}}</h3>
+    <span class="price">Number of drawings: {{.NumDrawings}}</span>
+  </div>
+{{end}}
