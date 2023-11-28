@@ -1,63 +1,51 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/Mauricio-3107/lenslocked-v2/models"
 )
 
-type PostgresConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Database string
-	SSLMode  string
-}
-
-func (cfg PostgresConfig) String() string {
-	// "host=localhost port=5433 user=baloo password=junglebook dbname=lenslocked-v2 sslmode=disable"
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database, cfg.SSLMode)
-}
-
 func main() {
-	cfg := PostgresConfig{
-		Host:     "localhost",
-		Port:     "5433",
-		User:     "baloo",
-		Password: "junglebook",
-		Database: "lenslocked-v2",
-		SSLMode:  "disable",
-	}
-	db, err := sql.Open("pgx", cfg.String())
+	cfg := models.DefaultPostgresConfig()
+	db, err := models.Open(cfg)
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
+
 	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Connected!")
 
-	// Creating table
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		name TEXT,
-		username TEXT NOT NULL
-	);
-	
-	CREATE TABLE IF NOT EXISTS tweets (
-		id SERIAL PRIMARY KEY,
-		user_id INT NOT NULL,
-		description TEXT,
-		retweets INT,
-		liked BOOLEAN
-	);`)
+	us := models.UserService{
+		DB: db,
+	}
+
+	user, err := us.Authenticate("luca@luca.com", "qwerty")
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(user)
+
+	// Creating table
+	// _, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
+	// 	id SERIAL PRIMARY KEY,
+	// 	name TEXT,
+	// 	username TEXT NOT NULL
+	// );
+
+	// CREATE TABLE IF NOT EXISTS tweets (
+	// 	id SERIAL PRIMARY KEY,
+	// 	user_id INT NOT NULL,
+	// 	description TEXT,
+	// 	retweets INT,
+	// 	liked BOOLEAN
+	// );`)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	// Inser data
 	// name := "Mauricio Ramirez"
@@ -102,40 +90,40 @@ func main() {
 	// }
 
 	// Querying multiple rows
-	userID := 2
-	type Tweet struct {
-		ID          int
-		UserID      int
-		Liked       bool
-		Retweets    int
-		Description string
-	}
-	var tweets []Tweet
+	// userID := 2
+	// type Tweet struct {
+	// 	ID          int
+	// 	UserID      int
+	// 	Liked       bool
+	// 	Retweets    int
+	// 	Description string
+	// }
+	// var tweets []Tweet
 
-	rows, err := db.Query(`
-	SELECT id, description, retweets, liked
-	FROM tweets
-	WHERE user_id=$1`, userID)
-	if err != nil {
-		panic(err)
-	}
-	defer rows.Close()
+	// rows, err := db.Query(`
+	// SELECT id, description, retweets, liked
+	// FROM tweets
+	// WHERE user_id=$1`, userID)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer rows.Close()
 
-	for rows.Next() {
-		var tweet Tweet
-		tweet.UserID = userID
-		err := rows.Scan(&tweet.ID, &tweet.Description, &tweet.Retweets, &tweet.Liked)
-		if err != nil {
-			panic(err)
-		}
-		tweets = append(tweets, tweet)
-	}
-	err = rows.Err()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Mauri's tweets")
-	for _, tweet := range tweets {
-		fmt.Println(tweet)
-	}
+	// for rows.Next() {
+	// 	var tweet Tweet
+	// 	tweet.UserID = userID
+	// 	err := rows.Scan(&tweet.ID, &tweet.Description, &tweet.Retweets, &tweet.Liked)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	tweets = append(tweets, tweet)
+	// }
+	// err = rows.Err()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println("Mauri's tweets")
+	// for _, tweet := range tweets {
+	// 	fmt.Println(tweet)
+	// }
 }
