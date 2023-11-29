@@ -9,12 +9,12 @@ import (
 	"github.com/Mauricio-3107/lenslocked-v2/templates"
 	"github.com/Mauricio-3107/lenslocked-v2/views"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/csrf"
 )
 
 func main() {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger)
 
 	r.Get("/", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
 
@@ -46,12 +46,28 @@ func main() {
 	r.Post("/signup", usersC.Create)
 	r.Get("/signin", usersC.SignIn)
 	r.Post("/signin", usersC.ProcessSignIn)
+	r.Get("/users/me", usersC.CurrentUser)
 
 	r.Get("/galleries", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "galleries.gohtml", "tailwind.gohtml"))))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
+
+	csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
+	csrfMw := csrf.Protect(
+		[]byte(csrfKey),
+		// TODO: Fix this before deploying
+		csrf.Secure(false),
+	)
 	fmt.Println("Starting the server on :3000...")
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(":3000", csrfMw(r))
 }
+
+// func TimerMiddleware(h http.HandlerFunc) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		start := time.Now()
+// 		h(w, r)
+// 		fmt.Println("Request time:", time.Since(start))
+// 	}
+// }
