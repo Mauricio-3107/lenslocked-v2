@@ -9,6 +9,9 @@ modd.conf
 # README.md
 README.md
 
+#env
+.env
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
