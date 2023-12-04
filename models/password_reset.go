@@ -102,21 +102,11 @@ func (service *PasswordResetService) Consume(token string) (*User, error) {
 	if time.Now().After(pwReset.ExpiresAt) {
 		return nil, fmt.Errorf("expired token: %w", err)
 	}
-	fmt.Printf("start: pwReset id: %v\n", pwReset.ID)
-	fmt.Printf("start: pwReset user_id: %v\n", pwReset.UserID)
-	fmt.Printf("start: pwReset token_hash: %v\n", pwReset.TokenHash)
-	fmt.Printf("start: pwReset expires_at: %v\n", pwReset.ExpiresAt)
 
 	err = service.delete(pwReset.ID)
 	if err != nil {
 		return nil, fmt.Errorf("consume: %w", err)
 	}
-	// fmt.Fprintf(os.Stdout, "user struct: %v", user)
-	// fmt.Fprintf(os.Stdout, "pwReset struct: %v", pwReset)
-	fmt.Printf("end: pwReset id: %v\n", pwReset.ID)
-	fmt.Printf("end: pwReset user_id: %v\n", pwReset.UserID)
-	fmt.Printf("end: pwReset token_hash: %v\n", pwReset.TokenHash)
-	fmt.Printf("end: pwReset expires_at: %v\n", pwReset.ExpiresAt)
 	return &user, nil
 }
 

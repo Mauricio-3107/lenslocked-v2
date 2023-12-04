@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/Mauricio-3107/lenslocked-v2/context"
+	"github.com/Mauricio-3107/lenslocked-v2/errors"
 	"github.com/Mauricio-3107/lenslocked-v2/models"
 )
 
@@ -32,12 +33,18 @@ func (u Users) New(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-	user, err := u.UserService.Create(email, password)
+	var data struct {
+		Email    string
+		Password string
+	}
+	data.Email = r.FormValue("email")
+	data.Password = r.FormValue("password")
+	user, err := u.UserService.Create(data.Email, data.Password)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		if errors.Is(err, models.ErrEmailTaken) {
+			err = errors.Public(err, "That email address is already associated with an account.")
+		}
+		u.Templates.New.Execute(w, r, data, err)
 		return
 	}
 	session, err := u.SessionService.Create(user.ID)
@@ -72,6 +79,7 @@ func (u Users) ProcessSignIn(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
+
 	session, err := u.SessionService.Create(user.ID)
 	if err != nil {
 		fmt.Println(err)
@@ -97,13 +105,6 @@ func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	}
 	deleteCookie(w, CookieSession)
 	http.Redirect(w, r, "/signin", http.StatusFound)
-}
-
-func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	// Because this route is behind the RequireUser middleware its not necessary to check if the user is nil
-	ctx := r.Context()
-	user := context.User(ctx)
-	fmt.Fprintf(w, "Current user: %s\n", user.Email)
 }
 
 func (u Users) ForgotPassword(w http.ResponseWriter, r *http.Request) {
@@ -151,8 +152,8 @@ func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request) {
 		Token    string
 		Password string
 	}
-	data.Token = r.FormValue("token")
 	data.Password = r.FormValue("password")
+	data.Token = r.FormValue("token")
 	user, err := u.PasswordResetService.Consume(data.Token)
 	if err != nil {
 		fmt.Println(err)
@@ -178,38 +179,9 @@ func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
-type UserMiddleware struct {
-	SessionService *models.SessionService
-}
-
-func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, err := readCookie(r, CookieSession)
-		if err != nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		user, err := umw.SessionService.User(token)
-		if err != nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		// Get the context
-		ctx := r.Context()
-		ctx = context.WithUser(ctx, user)
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (umw UserMiddleware) RequireUser(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		user := context.User(ctx)
-		if user == nil {
-			http.Redirect(w, r, "/signin", http.StatusFound)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
+	// Because this route is behind the RequireUser middleware its not necessary to check if the user is nil
+	ctx := r.Context()
+	user := context.User(ctx)
+	fmt.Fprintf(w, "Current user id: %d\n Current user email: %s\n Current user password_hash: %s\n", user.ID, user.Email, user.PasswordHash)
 }

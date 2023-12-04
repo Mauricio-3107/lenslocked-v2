@@ -17,19 +17,14 @@ const (
 type Session struct {
 	ID     int
 	UserID int
-	// Token is only set when creating a new session. When looking up a session
-	// this will be left empty, as we only store the hash of a session token
-	// in our database and we cannot reverse it into a raw token.
+	// Token is only set when creating a new session. When looking up a session this will be left empty, as we only store the hash of a session token in our database and we cannot reverse it into a raw token.
 	Token     string
 	TokenHash string
 }
 
 type SessionService struct {
 	DB *sql.DB
-	// BytesPerToken is used to determine how many bytes to use when generating
-	// each session token. If this value is not set or is less than the
-	// MinBytesPerToken const it will be ignored and MinBytesPerToken will be
-	// used.
+	// BytesPerToken is used to determine how many bytes to use when generating each session token. If this value is not set or is less than the MinBytesPerToken const it will be ignored and MinBytesPerToken will be used.
 	BytesPerToken int
 }
 
