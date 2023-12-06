@@ -9,6 +9,9 @@ modd.conf
 # README.md
 README.md
 
+# Images directory in development
+images/
+
 #env
 .env
 
