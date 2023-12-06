@@ -21,6 +21,7 @@ type Galleries struct {
 		Index Template
 	}
 	GalleryService *models.GalleryService
+	ImageService   *models.ImageService
 }
 
 func (g Galleries) New(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,7 @@ func (g Galleries) Show(w http.ResponseWriter, r *http.Request) {
 	data.ID = gallery.ID
 	data.Title = gallery.Title
 
-	images, err := g.GalleryService.Images(gallery.ID)
+	images, err := g.ImageService.Images(gallery.ID)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
@@ -106,7 +107,7 @@ func (g Galleries) Edit(w http.ResponseWriter, r *http.Request) {
 	data.ID = gallery.ID
 	data.Title = gallery.Title
 
-	images, err := g.GalleryService.Images(gallery.ID)
+	images, err := g.ImageService.Images(gallery.ID)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
@@ -237,7 +238,7 @@ func (g Galleries) Image(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Query for the image from your Image method model
-	image, err := g.GalleryService.Image(galleryID, filename)
+	image, err := g.ImageService.Image(galleryID, filename)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			http.Error(w, "Image not found", http.StatusNotFound)
@@ -260,7 +261,7 @@ func (g Galleries) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	err = g.GalleryService.DeleteImage(gallery.ID, filename)
+	err = g.ImageService.DeleteImage(gallery.ID, filename)
 	if err != nil {
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
@@ -289,7 +290,7 @@ func (g Galleries) UploadImage(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		err = g.GalleryService.CreateImage(gallery.ID, fileHeader.Filename, file)
+		err = g.ImageService.CreateImage(gallery.ID, fileHeader.Filename, file)
 		if err != nil {
 			var fileErr models.FileError
 			if errors.As(err, &fileErr) {
