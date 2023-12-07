@@ -15,6 +15,9 @@ images/
 #env
 .env
 
+# Node stuff
+node_modules/
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
