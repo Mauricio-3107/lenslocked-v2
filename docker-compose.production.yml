@@ -7,9 +7,10 @@ services:
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - ./images:/app/images
+      - ~/data/lenslocked.com/images:/app/images
     depends_on:
       - db
+
   caddy:
     image: caddy
     restart: always
@@ -18,3 +19,12 @@ services:
       - 443:443
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+
+  db:
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: ${PSQL_USER}
+      POSTGRES_PASSWORD: ${PSQL_PASSWORD}
+      POSTGRES_DB: ${PSQL_DATABASE}
+    volumes:
+      - ~/data/lenslocked.com/psql:/var/lib/postgresql/data/pgdata
