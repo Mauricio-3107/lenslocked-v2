@@ -97,6 +97,42 @@
         // closest.classList.add("hidden");
       }
     </script>
+    <script
+      type="text/javascript"
+      src="https://www.dropbox.com/static/api/2/dropins.js"
+      id="dropboxjs"
+      data-app-key="p39fgqq69rf0lll"
+    ></script>
+    <script>
+      function setupDropbox() {
+        let dbxForm = document.getElementById("dropbox-chooser-form");
+        if (dbxForm === null) {
+          return;
+        }
+
+        let options = {
+          success: function (files) {
+            for (let i = 0; i < files.length; i++) {
+              var input = document.createElement("input");
+              input.type = "hidden";
+              input.name = "files";
+              input.value = files[i].link;
+              dbxForm.appendChild(input);
+            }
+            dbxForm.submit();
+          },
+          linkType: "direct",
+          multiselect: true,
+          extensions: ["images"],
+          folderselect: false,
+        };
+
+        // I'm using let instead of var. They both allow us to define new variables in JS, but scope them differently.
+        let button = Dropbox.createChooseButton(options);
+        dbxForm.appendChild(button);
+      }
+      setupDropbox();
+    </script>
   </body>
 </html>
 {{ end }}

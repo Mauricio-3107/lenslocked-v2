@@ -304,3 +304,26 @@ func (g Galleries) UploadImage(w http.ResponseWriter, r *http.Request) {
 	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
 	http.Redirect(w, r, editPath, http.StatusFound)
 }
+
+func (g Galleries) ImageViaURL(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r, userMustOwnGalleries)
+	if err != nil {
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong", http.StatusBadRequest)
+		return
+	}
+	files := r.PostForm["files"]
+	for _, file := range files {
+		err = g.GalleryService.CreateImageViaURL(gallery.ID, file)
+		if err != nil {
+			http.Error(w, "Something went wrong with an image: "+file, http.StatusInternalServerError)
+			return
+		}
+	}
+	editPath := fmt.Sprintf("/galleries/%d/edit", gallery.ID)
+	http.Redirect(w, r, editPath, http.StatusFound)
+}
